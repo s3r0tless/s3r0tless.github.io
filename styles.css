@@ -1,0 +1,134 @@
+:root{
+  --bg-1: #071024;
+  --bg-2: #07182b;
+  --card: rgba(255,255,255,0.03);
+  --muted: #9fb0c8;
+  --text: #e6eef8;
+  --accent: #60a5fa;
+  --glass: rgba(255,255,255,0.03);
+  --gold: #f59e0b;
+  --silver: #94a3b8;
+  --bronze: #f97316;
+  --glass-border: rgba(255,255,255,0.04);
+  --radius: 14px;
+}
+
+html,body{height:100%;margin:0;background:linear-gradient(180deg,var(--bg-1) 0%, var(--bg-2) 100%);font-family:Inter, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;color:var(--text);-webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;}
+
+.page{
+  max-width:1080px;
+  margin:32px auto;
+  padding:28px;
+}
+
+.card{
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border-radius: var(--radius);
+  padding:22px;
+  box-shadow: 0 8px 40px rgba(2,6,23,0.6);
+  border: 1px solid var(--glass-border);
+  overflow: hidden;
+}
+
+header.top{
+  display:flex;
+  gap:18px;
+  align-items:center;
+  margin-bottom:14px;
+}
+.logo{
+  width:56px;height:56px;border-radius:12px;
+  background:linear-gradient(135deg,var(--accent), #3b82f6);
+  display:flex;align-items:center;justify-content:center;
+  font-weight:800;color:#04243a;font-size:20px;
+  box-shadow: 0 6px 18px rgba(96,165,250,0.12), inset 0 -6px 18px rgba(255,255,255,0.03);
+  transform: rotate(-6deg);
+}
+h1{margin:0;font-size:18px}
+p.lead{margin:0;color:var(--muted);font-size:13px}
+
+/* table container */
+.tableWrap{
+  margin-top:18px;
+  border-radius:12px;
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,0.025);
+  background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005));
+  transform-origin: center;
+}
+
+table{width:100%;border-collapse:collapse}
+thead th{
+  text-align:left;padding:14px 18px;border-bottom:1px solid rgba(255,255,255,0.03);
+  color:var(--muted);font-size:13px;letter-spacing:0.02em;
+  background: linear-gradient(180deg, rgba(255,255,255,0.012), transparent);
+  position:sticky;top:0;backdrop-filter: blur(6px);
+  z-index:2;
+}
+
+tbody tr{
+  transition: transform 280ms cubic-bezier(.2,.9,.2,1), box-shadow 220ms, background-color 220ms;
+  transform-origin: left center;
+}
+tbody tr:hover{
+  transform: translateY(-6px) scale(1.004);
+  box-shadow: 0 10px 30px rgba(2,6,23,0.5);
+  background: linear-gradient(90deg, rgba(255,255,255,0.012), rgba(255,255,255,0.006));
+}
+
+td{padding:14px 18px;border-bottom:1px solid rgba(255,255,255,0.02);vertical-align:middle}
+td.rank{width:110px;font-weight:700}
+
+.badge{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:44px;height:36px;padding:6px 10px;border-radius:999px;font-weight:800;font-size:14px;
+  color:#081018; box-shadow: 0 6px 18px rgba(2,6,23,0.25);
+  transform-origin:center center;
+  animation: badgePop 700ms cubic-bezier(.2,.9,.2,1) both;
+}
+
+.gold{background:linear-gradient(90deg,#ffe08b,var(--gold)); color:#081018;}
+.silver{background:linear-gradient(90deg,#e6eef8,var(--silver)); color:#041330;}
+.bronze{background:linear-gradient(90deg,#ffd9c2,var(--bronze)); color:#041018;}
+.rank-muted{color:var(--muted);font-weight:700;font-size:13px;padding-left:6px}
+
+td.nickname{font-weight:700}
+td.sum{font-variant-numeric: tabular-nums; text-align:right; color:#eaf6ff; font-weight:700}
+
+/* 링크 스타일 (닉네임) */
+.nick-link{
+  color: inherit;
+  text-decoration: none;
+  font-weight: 700;
+  display: inline-block;
+}
+.nick-link:focus, .nick-link:hover{
+  text-decoration: underline;
+  outline: none;
+}
+
+footer.info{margin-top:14px;color:var(--muted);font-size:13px;display:flex;justify-content:space-between;align-items:center}
+.sparkle{display:inline-block;border-radius:8px;padding:6px 10px;background:linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.008));border:1px solid rgba(255,255,255,0.02);font-weight:600;color:var(--muted)}
+
+/* animations */
+@keyframes slideUpFade {
+  from{opacity:0; transform: translateY(12px) scale(0.995)}
+  to{opacity:1; transform: translateY(0) scale(1)}
+}
+@keyframes badgePop {
+  0%{transform: scale(0.6) rotate(-8deg); opacity:0}
+  60%{transform: scale(1.08) rotate(3deg); opacity:1}
+  100%{transform: scale(1) rotate(0)}
+}
+@keyframes shimmer {
+  0%{background-position: -120% 0}
+  100%{background-position: 220% 0}
+}
+
+/* small screens */
+@media (max-width:720px){
+  .page{padding:18px}
+  td.sum{font-size:14px}
+  .logo{width:48px;height:48px;font-size:18px}
+  thead th, td{padding:12px}
+}
