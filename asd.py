@@ -8,6 +8,7 @@ from bs4 import BeautifulSoup, NavigableString
 NUM_RE = re.compile(r'[-+]?\d{1,3}(?:,\d{3})*(?:\.\d+)?|[-+]?\d+(?:\.\d+)?')
 TARGET_DIV_CLASSES = {"w-full", "h-full", "flex", "justify-center", "items-center"}
 CDN_AVATARS_PREFIX = r"https://cdn\.discordapp\.com/avatars/"
+DEFAULT_AVATAR = "https://cdn.discordapp.com/embed/avatars/0.png"
 
 def extract_numbers_from_text(text):
     if not text:
@@ -42,14 +43,9 @@ def extract_nickname_from_filename(fname):
         return nick if nick else fname
     return fname
 
-# HTML 전체에서 cdn.discordapp.com/avatars 로 시작하는 URL을 찾아서 반환
 AVATAR_URL_RE = re.compile(CDN_AVATARS_PREFIX + r'[^"\'\s<>)]*')
 
 def process_file_sum_and_avatar(path):
-    """
-    반환: (total: float, avatar_url: str)
-    avatar_url은 HTML 텍스트에서 처음 매칭되는 https://cdn.discordapp.com/avatars/... 형태의 문자열 (없으면 '')
-    """
     try:
         with open(path, "r", encoding="utf-8") as fh:
             html = fh.read()
@@ -71,7 +67,6 @@ def process_file_sum_and_avatar(path):
                     if nums:
                         total += sum(nums)
 
-    # HTML 전체 텍스트(원문)에서 해당 URL 패턴을 찾음
     m = AVATAR_URL_RE.search(html)
     avatar_url = m.group(0) if m else ""
     return total, avatar_url
@@ -101,7 +96,6 @@ def main():
         if nick not in players:
             players[nick] = {"sum": 0.0, "img_src": ""}
         players[nick]["sum"] += file_sum
-        # img_src는 아직 값이 없고 avatar가 발견된 경우에만 저장
         if not players[nick]["img_src"] and avatar:
             players[nick]["img_src"] = avatar
 
@@ -110,10 +104,11 @@ def main():
         val = players[nick]["sum"]
         if abs(val - int(val)) < 1e-12:
             val = int(val)
+        img = players[nick]["img_src"] or DEFAULT_AVATAR
         out_list.append({
             "nickname": nick,
             "sum": val,
-            "img_src": players[nick]["img_src"] or ""
+            "img_src": img
         })
 
     try:
