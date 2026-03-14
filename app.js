@@ -21,7 +21,6 @@ function fmt(n){
   return Number(n).toLocaleString(undefined, {maximumFractionDigits:4});
 }
 
-// img_src도 함께 집계하도록 수정
 function aggregate(arr){
   const map = new Map();
   for(const it of arr){
@@ -32,7 +31,6 @@ function aggregate(arr){
     if (!nick) continue;
     const existing = map.get(nick) || { sum: 0, img_src: '' };
     existing.sum += val;
-    // img_src는 먼저 발견된(비어있지 않은) 값을 유지
     if (!existing.img_src && it.img_src) existing.img_src = it.img_src;
     map.set(nick, existing);
   }
@@ -86,7 +84,6 @@ function renderTable(data){
     else badgeHtml = `<span class="rank-muted">${r.rank}</span>`;
     tdRank.innerHTML = badgeHtml;
 
-    // 닉네임 셀: 왼쪽에 프로필(있으면 img, 없으면 이니셜), 오른쪽에 링크
     const tdNick = document.createElement('td');
     tdNick.className = 'nickname';
     const nickWrap = document.createElement('div');
@@ -99,7 +96,6 @@ function renderTable(data){
       avatar.src = r.img_src;
       avatar.alt = `${r.nickname} avatar`;
       avatar.className = 'avatar';
-      // 스타일: 원형, 고정 크기, 잘림 처리
       avatar.style.width = '28px';
       avatar.style.height = '28px';
       avatar.style.borderRadius = '50%';
@@ -108,7 +104,6 @@ function renderTable(data){
       avatar.style.backgroundColor = 'var(--muted-bg, #eee)';
       nickWrap.appendChild(avatar);
     } else {
-      // 이미지 없는 경우: 이니셜을 간단한 원형 플레이스홀더로 표시
       const ph = document.createElement('div');
       ph.className = 'avatar-placeholder';
       ph.style.width = '28px';
@@ -122,7 +117,6 @@ function renderTable(data){
       ph.style.color = '#333';
       ph.style.fontSize = '12px';
       ph.style.fontWeight = '600';
-      // 닉네임에서 이니셜 생성
       const initials = String(r.nickname).split(/\s+/).map(s=>s[0]||'').join('').slice(0,2).toUpperCase();
       ph.textContent = initials || '?';
       nickWrap.appendChild(ph);
