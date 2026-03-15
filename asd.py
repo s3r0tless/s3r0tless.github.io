@@ -3,12 +3,13 @@ import re
 import sys
 import json
 from bs4 import BeautifulSoup, NavigableString
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 NUM_RE = re.compile(r'[-+]?\d{1,3}(?:,\d{3})*(?:\.\d+)?|[-+]?\d+(?:\.\d+)?')
 TARGET_DIV_CLASSES = {"w-full", "h-full", "flex", "justify-center", "items-center"}
 CDN_AVATARS_PREFIX = r"https://cdn\.discordapp\.com/avatars/"
 DEFAULT_AVATAR = "https://cdn.discordapp.com/embed/avatars/0.png"
+kst = timezone(timedelta(hours=9))
 
 def extract_numbers_from_text(text):
     if not text:
@@ -81,8 +82,7 @@ def main():
         out_json = sys.argv[2]
     if len(sys.argv) >= 4:
         download_info_json = sys.argv[3]
-
-    exec_time_str = datetime.now(timezone.utc).strftime('%Y-%m-%d %H-%M-%S')
+    exec_time_str = datetime.now(kst).strftime('%Y-%m-%d %H-%M-%S')
 
     files = find_html_files(start_dir)
     players = {}
