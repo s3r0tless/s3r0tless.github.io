@@ -229,7 +229,7 @@ function renderTable(data, downloadTime, tierImages){
       timg.style.height = '28px';
       timg.style.objectFit = 'contain';
       timg.style.marginLeft = '6px';
-      timg.style.flex = '0 0 18px';
+      timg.style.flex = '0 0 28px';
       nickWrap.appendChild(timg);
     }
 
