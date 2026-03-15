@@ -99,7 +99,7 @@ def main():
         out_json = sys.argv[2]
     if len(sys.argv) >= 4:
         download_info_json = sys.argv[3]
-    exec_time_str = datetime.now(kst).strftime('%Y-%m-%d %H-%M-%S')
+    exec_time_str = datetime.now(kst).strftime('%Y-%m-%d %H:%M:%S')
 
     files = find_html_files(start_dir)
     players = {}
