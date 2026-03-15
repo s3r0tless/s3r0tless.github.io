@@ -2,8 +2,8 @@ import os
 import re
 import sys
 import json
-from collections import defaultdict
 from bs4 import BeautifulSoup, NavigableString
+from datetime import datetime, timezone
 
 NUM_RE = re.compile(r'[-+]?\d{1,3}(?:,\d{3})*(?:\.\d+)?|[-+]?\d+(?:\.\d+)?')
 TARGET_DIV_CLASSES = {"w-full", "h-full", "flex", "justify-center", "items-center"}
@@ -74,10 +74,15 @@ def process_file_sum_and_avatar(path):
 def main():
     start_dir = "."
     out_json = "players_sum.json"
+    download_info_json = "download_info.json"
     if len(sys.argv) >= 2:
         start_dir = sys.argv[1]
     if len(sys.argv) >= 3:
         out_json = sys.argv[2]
+    if len(sys.argv) >= 4:
+        download_info_json = sys.argv[3]
+
+    exec_time_str = datetime.now(timezone.utc).strftime('%Y-%m-%d %H-%M-%S')
 
     files = find_html_files(start_dir)
     players = {}
@@ -86,7 +91,9 @@ def main():
         print(f"경고: .html/.htm 파일을 찾지 못했습니다: {start_dir}")
         with open(out_json, "w", encoding="utf-8") as fh:
             json.dump([], fh, ensure_ascii=False, indent=2)
-        print(f"빈 결과를 '{out_json}'에 저장했습니다.")
+        with open(download_info_json, "w", encoding="utf-8") as fh:
+            json.dump(exec_time_str, fh, ensure_ascii=False)
+        print(f"빈 결과를 '{out_json}'에, 실행 시각을 '{download_info_json}'에 저장했습니다. 시각(UTC): {exec_time_str}")
         return
 
     for fpath in sorted(files):
@@ -114,7 +121,9 @@ def main():
     try:
         with open(out_json, "w", encoding="utf-8") as fh:
             json.dump(out_list, fh, ensure_ascii=False, indent=2)
-        print(f"완료: 닉네임별 합계와 Discord avatar URL을 '{out_json}'에 저장했습니다. 항목 수: {len(out_list)}")
+        with open(download_info_json, "w", encoding="utf-8") as fh:
+            json.dump(exec_time_str, fh, ensure_ascii=False)
+        print(f"완료: '{out_json}'와 실행 시각을 '{download_info_json}'에 저장했습니다. 시각(UTC): {exec_time_str}")
     except Exception as e:
         print(f"오류: 결과를 저장하지 못했습니다: {e}")
 

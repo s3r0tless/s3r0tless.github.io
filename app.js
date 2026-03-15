@@ -1,4 +1,5 @@
 const DATA_FILE = 'players_sum.json';
+const DOWNLOAD_INFO_FILE = 'download_info.json';
 
 async function loadRawJson(){
   try{
@@ -11,6 +12,29 @@ async function loadRawJson(){
   }catch(err){
     console.error('데이터 로드 실패:', err);
     return [];
+  }
+}
+
+async function loadDownloadTime(){
+  try{
+    const res = await fetch(DOWNLOAD_INFO_FILE, { cache: 'no-cache' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    let data;
+    try {
+      data = await res.json();
+    } catch(e) {
+      data = await res.text();
+    }
+    if (!data) return null;
+    if (typeof data === 'string') return data;
+    if (typeof data === 'object') {
+      if (data.saved_at) return data.saved_at;
+      const vals = Object.values(data);
+      for (const v of vals) if (typeof v === 'string') return v;
+    }
+    return null;
+  }catch(err){
+    return null;
   }
 }
 
@@ -43,13 +67,24 @@ function aggregate(arr){
 
 function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-function renderTable(data){
+function renderTable(data, downloadTime){
   const list = data.slice().sort((a,b)=>b.sum - a.sum);
   const wrap = document.getElementById('tableWrap');
   wrap.innerHTML = ''; // 초기화
 
+  if (downloadTime){
+    const info = document.createElement('div');
+    info.className = 'download-time';
+    info.style.padding = '8px 18px';
+    info.style.fontSize = '13px';
+    info.style.color = 'var(--muted, #666)';
+    info.style.marginBottom = '6px';
+    info.textContent = `저장 시각 (UTC): ${downloadTime}`;
+    wrap.appendChild(info);
+  }
+
   if (!list.length){
-    wrap.innerHTML = '<p style="padding:18px;color:var(--muted)">표시할 항목이 없습니다.</p>';
+    wrap.innerHTML += '<p style="padding:18px;color:var(--muted)">표시할 항목이 없습니다.</p>';
     return;
   }
 
@@ -160,10 +195,10 @@ function renderTable(data){
 }
 
 (function init(){
-  loadRawJson().then((raw)=>{
+  Promise.all([loadRawJson(), loadDownloadTime()]).then(([raw, downloadTime])=>{
     try{
       const ag = aggregate(raw);
-      renderTable(ag);
+      renderTable(ag, downloadTime);
     }catch(err){
       console.error(err);
       document.getElementById('tableWrap').innerHTML = '<p style="padding:18px;color:var(--muted)">데이터 처리 중 오류가 발생했습니다. 콘솔을 확인하세요.</p>';
