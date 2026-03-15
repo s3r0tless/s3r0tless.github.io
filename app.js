@@ -225,8 +225,8 @@ function renderTable(data, downloadTime, tierImages){
       timg.src = tierUrl;
       timg.alt = `${tierKey} tier`;
       timg.title = tierKey;
-      timg.style.width = '18px';
-      timg.style.height = '18px';
+      timg.style.width = '28px';
+      timg.style.height = '28px';
       timg.style.objectFit = 'contain';
       timg.style.marginLeft = '6px';
       timg.style.flex = '0 0 18px';
