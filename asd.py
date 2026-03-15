@@ -47,6 +47,10 @@ def extract_nickname_from_filename(fname):
 AVATAR_URL_RE = re.compile(CDN_AVATARS_PREFIX + r'[^"\'\s<>)]*')
 
 def process_file_sum_and_avatar(path):
+    """
+    파일 단위로 처리해서 합계, avatar url 외에
+    span.mr-4 텍스트들, span.capitalize 텍스트들을 반환합니다.
+    """
     try:
         with open(path, "r", encoding="utf-8") as fh:
             html = fh.read()
@@ -70,7 +74,20 @@ def process_file_sum_and_avatar(path):
 
     m = AVATAR_URL_RE.search(html)
     avatar_url = m.group(0) if m else ""
-    return total, avatar_url
+
+    mr4_texts = []
+    for sp in soup.find_all("span", class_="mr-4"):
+        txt = sp.get_text(strip=True)
+        if txt:
+            mr4_texts.append(txt)
+
+    cap_texts = []
+    for sp in soup.find_all("span", class_="capitalize"):
+        txt = sp.get_text(strip=True)
+        if txt:
+            cap_texts.append(txt)
+
+    return total, avatar_url, mr4_texts, cap_texts
 
 def main():
     start_dir = "."
@@ -97,14 +114,23 @@ def main():
         return
 
     for fpath in sorted(files):
-        file_sum, avatar = process_file_sum_and_avatar(fpath)
+        file_sum, avatar, mr4_texts, cap_texts = process_file_sum_and_avatar(fpath)
         basename = os.path.splitext(os.path.basename(fpath))[0]
         nick = extract_nickname_from_filename(basename)
         if nick not in players:
-            players[nick] = {"sum": 0.0, "img_src": ""}
+            players[nick] = {
+                "sum": 0.0,
+                "img_src": "",
+                "_mr4_set": set(),
+                "_cap_set": set()
+            }
         players[nick]["sum"] += file_sum
         if not players[nick]["img_src"] and avatar:
             players[nick]["img_src"] = avatar
+        for t in mr4_texts:
+            players[nick]["_mr4_set"].add(t)
+        for t in cap_texts:
+            players[nick]["_cap_set"].add(t)
 
     out_list = []
     for nick in sorted(players.keys(), key=lambda x: x.lower()):
@@ -112,10 +138,16 @@ def main():
         if abs(val - int(val)) < 1e-12:
             val = int(val)
         img = players[nick]["img_src"] or DEFAULT_AVATAR
+        mr4_list = sorted(players[nick].get("_mr4_set", []))
+        cap_list = sorted(players[nick].get("_cap_set", []))
+        if not cap_list:
+            cap_list = ["unranked"]
         out_list.append({
             "nickname": nick,
             "sum": val,
-            "img_src": img
+            "img_src": img,
+            "mr_4": mr4_list,
+            "capitalize": cap_list
         })
 
     try:

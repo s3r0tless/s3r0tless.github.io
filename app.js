@@ -1,5 +1,6 @@
 const DATA_FILE = 'players_sum.json';
 const DOWNLOAD_INFO_FILE = 'download_info.json';
+const TIER_IMAGES_FILE = 'tier_images.json';
 
 async function loadRawJson(){
   try{
@@ -38,6 +39,22 @@ async function loadDownloadTime(){
   }
 }
 
+async function loadTierImages(){
+  try{
+    const res = await fetch(TIER_IMAGES_FILE, { cache: 'no-cache' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const json = await res.json();
+    const map = {};
+    for (const k of Object.keys(json || {})){
+      map[String(k).toLowerCase()] = String(json[k] || '');
+    }
+    return map;
+  }catch(err){
+    console.warn('티어 이미지 로드 실패:', err);
+    return {};
+  }
+}
+
 function fmt(n){
   if (n === null || n === undefined) return '-';
   if (!isFinite(n)) return '-';
@@ -53,21 +70,48 @@ function aggregate(arr){
     let val = Number(it.sum);
     if (!isFinite(val)) val = 0;
     if (!nick) continue;
-    const existing = map.get(nick) || { sum: 0, img_src: '' };
+
+    const existing = map.get(nick) || { sum: 0, img_src: '', mr4_set: new Set(), cap_set: new Set() };
     existing.sum += val;
     if (!existing.img_src && it.img_src) existing.img_src = it.img_src;
+
+    const mrCandidates = [];
+    if (Array.isArray(it.mr_4)) mrCandidates.push(...it.mr_4);
+    if (Array.isArray(it['mr-4'])) mrCandidates.push(...it['mr-4']);
+    if (Array.isArray(it.mr4)) mrCandidates.push(...it.mr4);
+    if (typeof it.mr_4 === 'string') mrCandidates.push(it.mr_4);
+    for (const m of mrCandidates){
+      if (m || m === 0) existing.mr4_set.add(String(m));
+    }
+
+    const capCandidates = [];
+    if (Array.isArray(it.capitalize)) capCandidates.push(...it.capitalize);
+    if (typeof it.capitalize === 'string') capCandidates.push(it.capitalize);
+    if (Array.isArray(it.cap)) capCandidates.push(...it.cap);
+    for (const c of capCandidates){
+      if (c || c === 0) existing.cap_set.add(String(c));
+    }
+
     map.set(nick, existing);
   }
-  return Array.from(map.entries()).map(([nickname,obj])=>({
-    nickname,
-    sum: obj.sum,
-    img_src: obj.img_src || ''
-  }));
+
+  return Array.from(map.entries()).map(([nickname,obj])=>{
+    const mr4 = Array.from(obj.mr4_set).filter(x=>x!=null && String(x).trim()!=='').sort();
+    let cap = Array.from(obj.cap_set).filter(x=>x!=null && String(x).trim()!=='').sort();
+    if (!cap.length) cap = ['unranked'];
+    return {
+      nickname,
+      sum: obj.sum,
+      img_src: obj.img_src || '',
+      mr_4: mr4,
+      capitalize: cap
+    };
+  });
 }
 
 function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-function renderTable(data, downloadTime){
+function renderTable(data, downloadTime, tierImages){
   const list = data.slice().sort((a,b)=>b.sum - a.sum);
   const wrap = document.getElementById('tableWrap');
   wrap.innerHTML = ''; // 초기화
@@ -168,6 +212,55 @@ function renderTable(data, downloadTime){
     a.style.fontWeight = '600';
     nickWrap.appendChild(a);
 
+    let tierKey = 'unranked';
+    if (Array.isArray(r.capitalize) && r.capitalize.length) {
+      tierKey = String(r.capitalize[0]).toLowerCase();
+    } else if (typeof r.capitalize === 'string' && r.capitalize.trim()) {
+      tierKey = r.capitalize.toLowerCase();
+    }
+    const tierUrl = (tierImages && tierImages[tierKey]) ? tierImages[tierKey] : '';
+
+    if (tierUrl) {
+      const timg = document.createElement('img');
+      timg.src = tierUrl;
+      timg.alt = `${tierKey} tier`;
+      timg.title = tierKey;
+      timg.style.width = '18px';
+      timg.style.height = '18px';
+      timg.style.objectFit = 'contain';
+      timg.style.marginLeft = '6px';
+      timg.style.flex = '0 0 18px';
+      nickWrap.appendChild(timg);
+    }
+
+    const metaWrap = document.createElement('div');
+    metaWrap.style.display = 'flex';
+    metaWrap.style.flexDirection = 'column';
+    metaWrap.style.marginLeft = '8px';
+    metaWrap.style.fontSize = '12px';
+    metaWrap.style.lineHeight = '1';
+    metaWrap.style.color = 'var(--muted, #666)';
+
+    const mrText = Array.isArray(r.mr_4) && r.mr_4.length ? r.mr_4.join(', ') : '';
+    if (mrText) {
+      const sp = document.createElement('div');
+      sp.className = 'meta-mr4';
+      sp.textContent = mrText;
+      metaWrap.appendChild(sp);
+    }
+
+    const capText = Array.isArray(r.capitalize) && r.capitalize.length ? r.capitalize.join(', ') : '';
+    if (capText) {
+      const sp2 = document.createElement('div');
+      sp2.className = 'meta-cap';
+      sp2.textContent = capText;
+      metaWrap.appendChild(sp2);
+    }
+
+    if (metaWrap.childElementCount > 0) {
+      nickWrap.appendChild(metaWrap);
+    }
+
     tdNick.appendChild(nickWrap);
 
     const tdSum = document.createElement('td');
@@ -195,10 +288,10 @@ function renderTable(data, downloadTime){
 }
 
 (function init(){
-  Promise.all([loadRawJson(), loadDownloadTime()]).then(([raw, downloadTime])=>{
+  Promise.all([loadRawJson(), loadDownloadTime(), loadTierImages()]).then(([raw, downloadTime, tierImages])=>{
     try{
       const ag = aggregate(raw);
-      renderTable(ag, downloadTime);
+      renderTable(ag, downloadTime, tierImages);
     }catch(err){
       console.error(err);
       document.getElementById('tableWrap').innerHTML = '<p style="padding:18px;color:var(--muted)">데이터 처리 중 오류가 발생했습니다. 콘솔을 확인하세요.</p>';

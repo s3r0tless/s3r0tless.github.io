@@ -2,21 +2,45 @@
   {
     "nickname": "ang_gimoggi",
     "sum": 59,
-    "img_src": "https://cdn.discordapp.com/avatars/759320895386550303/dc95f5e78449b3bdc5e9adbd7adac446.png"
+    "img_src": "https://cdn.discordapp.com/avatars/759320895386550303/dc95f5e78449b3bdc5e9adbd7adac446.png",
+    "mr_4": [
+      "0"
+    ],
+    "capitalize": [
+      "unranked"
+    ]
   },
   {
     "nickname": "janyu_1",
     "sum": 883,
-    "img_src": "https://cdn.discordapp.com/avatars/1127095415985160245/16a75529d1febf199c63d10ddcdbd973.png"
+    "img_src": "https://cdn.discordapp.com/avatars/1127095415985160245/16a75529d1febf199c63d10ddcdbd973.png",
+    "mr_4": [
+      "0"
+    ],
+    "capitalize": [
+      "unranked"
+    ]
   },
   {
     "nickname": "koko_0726",
     "sum": 1540,
-    "img_src": "https://cdn.discordapp.com/avatars/847840244279935017/9caae703b4617685e5cad4df0157ef1c.png"
+    "img_src": "https://cdn.discordapp.com/avatars/847840244279935017/9caae703b4617685e5cad4df0157ef1c.png",
+    "mr_4": [
+      "111"
+    ],
+    "capitalize": [
+      "iron"
+    ]
   },
   {
     "nickname": "niemigaebozi",
     "sum": 4144,
-    "img_src": "https://cdn.discordapp.com/embed/avatars/0.png"
+    "img_src": "https://cdn.discordapp.com/embed/avatars/0.png",
+    "mr_4": [
+      "455"
+    ],
+    "capitalize": [
+      "gold"
+    ]
   }
 ]

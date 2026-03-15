@@ -1,0 +1,15 @@
+{
+  "unranked": "https://cdn.voltaic.gg/Simple_standard_all-scaled_0_Unranked_1.svg",
+  "iron": "https://cdn.voltaic.gg/rank-icons/scaled/Simple_standard_all-scaled_1_Iron.svg",
+  "bronze": "https://cdn.voltaic.gg/rank-icons/scaled/Simple_standard_all-scaled_2_Bronze.svg",
+  "silver": "https://cdn.voltaic.gg/rank-icons/scaled/Simple_standard_all-scaled_3_Silver.svg",
+  "gold": "https://cdn.voltaic.gg/rank-icons/scaled/Simple_standard_all-scaled_4_Gold.svg",
+  "platinum": "https://cdn.voltaic.gg/rank-icons/scaled/Simple_standard_all-scaled_5_Platinum.svg",
+  "diamond": "https://cdn.voltaic.gg/rank-icons/scaled/Simple_standard_all-scaled_6_Diamond.svg",
+  "jade": "https://cdn.voltaic.gg/rank-icons/scaled/Simple_standard_all-scaled_7_Jade.svg",
+  "master": "https://cdn.voltaic.gg/rank-icons/scaled/Simple_standard_all-scaled_8_Master.svg",
+  "grandmaster": "https://cdn.voltaic.gg/rank-icons/scaled/Simple_standard_all-scaled_9_Grandmaster.svg",
+  "nova": "https://cdn.voltaic.gg/rank-icons/scaled/Simple_standard_all-scaled_10_Nova.svg",
+  "astra": "https://cdn.voltaic.gg/rank-icons/scaled/Simple_standard_all-scaled_11_Astra.svg",
+  "celestial": "https://cdn.voltaic.gg/rank-icons/scaled/Simple_standard_all-scaled_12_Celestial.svg"
+}
