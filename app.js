@@ -111,10 +111,31 @@ function aggregate(arr){
 
 function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
+function findTierKeyFromCap(capitalize, tierImages){
+  if (!capitalize || !tierImages) return null;
+  const keys = Object.keys(tierImages || {}).map(k => String(k).toLowerCase());
+  if (!keys.length) return null;
+  const caps = Array.isArray(capitalize) ? capitalize : [capitalize];
+  for (const raw of caps){
+    const capStr = String(raw || '').toLowerCase().trim();
+    if (!capStr) continue;
+    const tokens = capStr.split(/[\s,._\-]+/).filter(Boolean);
+    for (const t of tokens){
+      for (const k of keys){
+        if (t === k) return k;
+      }
+    }
+    for (const k of keys){
+      if (capStr.includes(k)) return k;
+    }
+  }
+  return null;
+}
+
 function renderTable(data, downloadTime, tierImages){
   const list = data.slice().sort((a,b)=>b.sum - a.sum);
   const wrap = document.getElementById('tableWrap');
-  wrap.innerHTML = ''; // 초기화
+  wrap.innerHTML = '';
 
   if (downloadTime){
     const info = document.createElement('div');
@@ -134,7 +155,7 @@ function renderTable(data, downloadTime, tierImages){
 
   let prevSum = null;
   let rankCounter = 0;
-  const rows = list.map((it)=>{ 
+  const rows = list.map((it)=>{
     if (prevSum === null || Math.abs(it.sum - prevSum) > 1e-12){
       rankCounter++;
       prevSum = it.sum;
@@ -213,7 +234,10 @@ function renderTable(data, downloadTime, tierImages){
     nickWrap.appendChild(a);
 
     let tierKey = 'unranked';
-    if (Array.isArray(r.capitalize) && r.capitalize.length) {
+    const matched = findTierKeyFromCap(r.capitalize, tierImages);
+    if (matched) {
+      tierKey = matched;
+    } else if (Array.isArray(r.capitalize) && r.capitalize.length) {
       tierKey = String(r.capitalize[0]).toLowerCase();
     } else if (typeof r.capitalize === 'string' && r.capitalize.trim()) {
       tierKey = r.capitalize.toLowerCase();
