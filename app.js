@@ -1,6 +1,5 @@
 const DATA_FILE = 'players_sum.json';
 const DOWNLOAD_INFO_FILE = 'download_info.json';
-const TIER_IMAGES_FILE = 'tier_images.json';
 
 async function loadRawJson(){
   try{
@@ -21,11 +20,7 @@ async function loadDownloadTime(){
     const res = await fetch(DOWNLOAD_INFO_FILE, { cache: 'no-cache' });
     if (!res.ok) throw new Error('HTTP ' + res.status);
     let data;
-    try {
-      data = await res.json();
-    } catch(e) {
-      data = await res.text();
-    }
+    try { data = await res.json(); } catch(e) { data = await res.text(); }
     if (!data) return null;
     if (typeof data === 'string') return data;
     if (typeof data === 'object') {
@@ -34,25 +29,7 @@ async function loadDownloadTime(){
       for (const v of vals) if (typeof v === 'string') return v;
     }
     return null;
-  }catch(err){
-    return null;
-  }
-}
-
-async function loadTierImages(){
-  try{
-    const res = await fetch(TIER_IMAGES_FILE, { cache: 'no-cache' });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const json = await res.json();
-    const map = {};
-    for (const k of Object.keys(json || {})){
-      map[String(k).toLowerCase()] = String(json[k] || '');
-    }
-    return map;
-  }catch(err){
-    console.warn('티어 이미지 로드 실패:', err);
-    return {};
-  }
+  }catch(err){ return null; }
 }
 
 function fmt(n){
@@ -80,17 +57,13 @@ function aggregate(arr){
     if (Array.isArray(it['mr-4'])) mrCandidates.push(...it['mr-4']);
     if (Array.isArray(it.mr4)) mrCandidates.push(...it.mr4);
     if (typeof it.mr_4 === 'string') mrCandidates.push(it.mr_4);
-    for (const m of mrCandidates){
-      if (m || m === 0) existing.mr4_set.add(String(m));
-    }
+    for (const m of mrCandidates){ if (m || m === 0) existing.mr4_set.add(String(m)); }
 
     const capCandidates = [];
     if (Array.isArray(it.capitalize)) capCandidates.push(...it.capitalize);
     if (typeof it.capitalize === 'string') capCandidates.push(it.capitalize);
     if (Array.isArray(it.cap)) capCandidates.push(...it.cap);
-    for (const c of capCandidates){
-      if (c || c === 0) existing.cap_set.add(String(c));
-    }
+    for (const c of capCandidates){ if (c || c === 0) existing.cap_set.add(String(c)); }
 
     map.set(nick, existing);
   }
@@ -111,55 +84,25 @@ function aggregate(arr){
 
 function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-function findTierKeyFromCap(capitalize, tierImages){
-  if (!capitalize || !tierImages) return null;
-  const keys = Object.keys(tierImages || {}).map(k => String(k).toLowerCase());
-  if (!keys.length) return null;
-  const caps = Array.isArray(capitalize) ? capitalize : [capitalize];
-  for (const raw of caps){
-    const capStr = String(raw || '').toLowerCase().trim();
-    if (!capStr) continue;
-    const tokens = capStr.split(/[\s,._\-]+/).filter(Boolean);
-    for (const t of tokens){
-      for (const k of keys){
-        if (t === k) return k;
-      }
-    }
-    for (const k of keys){
-      if (capStr.includes(k)) return k;
-    }
-  }
-  return null;
-}
-
-function renderTable(data, downloadTime, tierImages){
+function renderTable(data, downloadTime){
   const list = data.slice().sort((a,b)=>b.sum - a.sum);
   const wrap = document.getElementById('tableWrap');
   wrap.innerHTML = '';
 
   if (downloadTime){
-    const info = document.createElement('div');
-    info.className = 'download-time';
-    info.style.padding = '8px 18px';
-    info.style.fontSize = '13px';
-    info.style.color = 'var(--muted, #666)';
-    info.style.marginBottom = '6px';
-    info.textContent = `저장 시각 (UTC): ${downloadTime}`;
-    wrap.appendChild(info);
+    const info = document.getElementById('downloadInfo');
+    if (info) info.textContent = `저장 시각 (UTC): ${downloadTime}`;
   }
 
   if (!list.length){
-    wrap.innerHTML += '<p style="padding:18px;color:var(--muted)">표시할 항목이 없습니다.</p>';
+    wrap.innerHTML = '<p style="padding:18px;color:var(--muted)">표시할 항목이 없습니다.</p>';
     return;
   }
 
   let prevSum = null;
   let rankCounter = 0;
   const rows = list.map((it)=>{
-    if (prevSum === null || Math.abs(it.sum - prevSum) > 1e-12){
-      rankCounter++;
-      prevSum = it.sum;
-    }
+    if (prevSum === null || Math.abs(it.sum - prevSum) > 1e-12){ rankCounter++; prevSum = it.sum; }
     return Object.assign({}, it, {rank: rankCounter});
   });
 
@@ -173,50 +116,39 @@ function renderTable(data, downloadTime, tierImages){
   rows.forEach((r, idx) => {
     const tr = document.createElement('tr');
     tr.style.animation = `slideUpFade 420ms cubic-bezier(.2,.9,.2,1) both`;
-    tr.style.animationDelay = `${idx * 40}ms`;
+    tr.style.animationDelay = `${idx * 28}ms`;
 
+    // rank cell — 이미지/뱃지 대신 심플한 숫자만 사용
     const tdRank = document.createElement('td');
     tdRank.className = 'rank';
-    let badgeHtml = '';
-    if (r.rank === 1) badgeHtml = `<span class="badge gold">1</span>`;
-    else if (r.rank === 2) badgeHtml = `<span class="badge silver">2</span>`;
-    else if (r.rank === 3) badgeHtml = `<span class="badge bronze">3</span>`;
-    else badgeHtml = `<span class="rank-muted">${r.rank}</span>`;
-    tdRank.innerHTML = badgeHtml;
+    tdRank.innerHTML = `<span class="rank-number">${r.rank}</span>`;
 
     const tdNick = document.createElement('td');
     tdNick.className = 'nickname';
     const nickWrap = document.createElement('div');
     nickWrap.style.display = 'flex';
     nickWrap.style.alignItems = 'center';
-    nickWrap.style.gap = '8px';
+    nickWrap.style.gap = '12px';
 
     if (r.img_src) {
       const avatar = document.createElement('img');
       avatar.src = r.img_src;
       avatar.alt = `${r.nickname} avatar`;
       avatar.className = 'avatar';
-      avatar.style.width = '28px';
-      avatar.style.height = '28px';
-      avatar.style.borderRadius = '50%';
-      avatar.style.objectFit = 'cover';
-      avatar.style.flex = '0 0 28px';
-      avatar.style.backgroundColor = 'var(--muted-bg, #eee)';
       nickWrap.appendChild(avatar);
     } else {
       const ph = document.createElement('div');
       ph.className = 'avatar-placeholder';
-      ph.style.width = '28px';
-      ph.style.height = '28px';
-      ph.style.borderRadius = '50%';
+      ph.style.width = '48px';
+      ph.style.height = '48px';
+      ph.style.borderRadius = '12px';
       ph.style.display = 'inline-flex';
       ph.style.alignItems = 'center';
       ph.style.justifyContent = 'center';
-      ph.style.flex = '0 0 28px';
-      ph.style.background = 'linear-gradient(135deg,#ddd,#bbb)';
-      ph.style.color = '#333';
-      ph.style.fontSize = '12px';
-      ph.style.fontWeight = '600';
+      ph.style.background = 'linear-gradient(135deg,#263238,#1b2936)';
+      ph.style.color = 'var(--text)';
+      ph.style.fontSize = '14px';
+      ph.style.fontWeight = '700';
       const initials = String(r.nickname).split(/\s+/).map(s=>s[0]||'').join('').slice(0,2).toUpperCase();
       ph.textContent = initials || '?';
       nickWrap.appendChild(ph);
@@ -230,32 +162,8 @@ function renderTable(data, downloadTime, tierImages){
     a.textContent = String(r.nickname);
     a.style.textDecoration = 'none';
     a.style.color = 'inherit';
-    a.style.fontWeight = '600';
+    a.style.fontWeight = '700';
     nickWrap.appendChild(a);
-
-    let tierKey = 'unranked';
-    const matched = findTierKeyFromCap(r.capitalize, tierImages);
-    if (matched) {
-      tierKey = matched;
-    } else if (Array.isArray(r.capitalize) && r.capitalize.length) {
-      tierKey = String(r.capitalize[0]).toLowerCase();
-    } else if (typeof r.capitalize === 'string' && r.capitalize.trim()) {
-      tierKey = r.capitalize.toLowerCase();
-    }
-    const tierUrl = (tierImages && tierImages[tierKey]) ? tierImages[tierKey] : '';
-
-    if (tierUrl) {
-      const timg = document.createElement('img');
-      timg.src = tierUrl;
-      timg.alt = `${tierKey} tier`;
-      timg.title = tierKey;
-      timg.style.width = '28px';
-      timg.style.height = '28px';
-      timg.style.objectFit = 'contain';
-      timg.style.marginLeft = '6px';
-      timg.style.flex = '0 0 28px';
-      nickWrap.appendChild(timg);
-    }
 
     const metaWrap = document.createElement('div');
     metaWrap.style.display = 'flex';
@@ -273,11 +181,21 @@ function renderTable(data, downloadTime, tierImages){
       metaWrap.appendChild(sp);
     }
 
+    // capitalize (가시성 강화)
     const capText = Array.isArray(r.capitalize) && r.capitalize.length ? r.capitalize.join(', ') : '';
     if (capText) {
       const sp2 = document.createElement('div');
       sp2.className = 'meta-cap';
       sp2.textContent = capText;
+      sp2.style.display = 'inline-block';
+      sp2.style.marginTop = '6px';
+      sp2.style.padding = '6px 10px';
+      sp2.style.borderRadius = '999px';
+      sp2.style.fontWeight = '700';
+      sp2.style.fontSize = '13px';
+      sp2.style.background = 'rgba(99,102,241,0.10)';
+      sp2.style.color = '#c7d2fe';
+      sp2.style.boxShadow = '0 2px 6px rgba(0,0,0,0.28)';
       metaWrap.appendChild(sp2);
     }
 
@@ -302,20 +220,22 @@ function renderTable(data, downloadTime, tierImages){
   table.appendChild(tbody);
   wrap.appendChild(table);
 
-  const goldEl = document.querySelector('.badge.gold');
-  if (goldEl){
-    goldEl.style.backgroundSize = '200% 100%';
-    goldEl.style.backgroundImage = 'linear-gradient(90deg,#fff2cc,#ffe08b,#f59e0b)';
-    goldEl.style.animation += ', shimmer 2200ms linear infinite';
-    goldEl.style.animationDelay = '600ms';
-  }
+  // 뱃지 이미지는 사용하지 않음(심플 숫자 표시만)
 }
 
 (function init(){
-  Promise.all([loadRawJson(), loadDownloadTime(), loadTierImages()]).then(([raw, downloadTime, tierImages])=>{
+  Promise.all([loadRawJson(), loadDownloadTime()]).then(([raw, downloadTime])=>{
     try{
       const ag = aggregate(raw);
-      renderTable(ag, downloadTime, tierImages);
+      renderTable(ag, downloadTime);
+
+      // small client-side filtering
+      window.addEventListener('filterSearch', (e)=>{
+        const q = String(e.detail.q || '').trim().toLowerCase();
+        const filtered = ag.filter(x => x.nickname.toLowerCase().includes(q));
+        renderTable(filtered, downloadTime);
+      });
+
     }catch(err){
       console.error(err);
       document.getElementById('tableWrap').innerHTML = '<p style="padding:18px;color:var(--muted)">데이터 처리 중 오류가 발생했습니다. 콘솔을 확인하세요.</p>';
